@@ -1,53 +1,76 @@
 name: shared-specs-only
 version: 1
-description: Shared cross-platform specs - concise proposal → specs (no design, no tasks)
+description: Shared cross-platform specs only - decisions → proposal → specs (no design, no tasks)
 artifacts:
+  - id: decisions
+    generates: decisions.md
+    description: Decisions settled by interviewing the user before any planning is written
+    template: decisions.md
+    instruction: |
+      Run the careful-planning skill for this change. The skill interviews the user
+      in rounds with the AskUserQuestion tool, looks up facts itself, and
+      writes decisions.md only after the user has confirmed the shared
+      understanding. Do not write the file by hand and do not answer questions
+      on the user's behalf. If the careful-planning skill is not available, stop
+      and tell the user instead of writing decisions.md yourself.
+
+      This store holds specs shared across platforms, so the interview settles
+      behavior and contract decisions only, never how a platform will build
+      the change. Make sure the decisions cover what the proposal needs:
+      whether the change is breaking, which platforms it targets (at least
+      two), and the observable behavior, inputs, outputs and error conditions
+      the specs will describe.
+    requires: []
+
   - id: proposal
     generates: proposal.md
-    description: Short proposal stating what changes, why, which platforms it targets, and whether it breaks them
+    description: Short proposal stating what changes, why, and which platforms it targets
     template: proposal.md
     instruction: |
-      Write a SHORT proposal (aim for well under one page). It states WHAT is
-      changing and WHY - nothing else. This store holds specs shared across
-      platforms, so there are no implementation details: never mention code,
-      modules, libraries, internal APIs, per-codebase migration steps,
-      or how a platform will build it.
+      Create a short proposal that states WHAT changes and WHY. Nothing else.
 
-      Sections (follow the template order exactly):
-      - **Breaking change**: Always first. Either
-        `**⚠️ BREAKING - all targeted platforms MUST migrate.**` followed by one
-        or two bullets saying what breaks and what each platform must adopt, or
-        exactly `None.` A change is breaking when an existing requirement is
-        modified or removed in a way that makes current platform behavior
-        non-compliant. When in doubt, ask the user - never omit this section.
-      - **Platforms**: Bullet list of every platform this change targets
-        (always at least two - otherwise the change belongs in that
-        platform's own store, not here).
-      - **Why**: 1-2 sentences. The problem or opportunity.
-      - **What Changes**: Short bullet list of behavior/contract changes,
-        one line each. Mark individual breaking bullets with **BREAKING**.
+      This store holds specs shared across platforms. There are no
+      implementation details here, so never describe how a platform will
+      build the change.
+
+      Base the proposal on decisions.md. Do not introduce behavior that
+      contradicts it or that it does not cover; if something is missing,
+      stop and run the careful-planning skill again for the open point.
+
+      Sections:
+      - **Breaking Change**: Always first. Write `Yes` or `No`. If `Yes`, start
+        the proposal with a `> **BREAKING - ALL PLATFORMS MUST MIGRATE**` callout
+        above this section, then say in one or two lines what breaks and what
+        every platform has to migrate.
+      - **Target Platforms**: Bullet list of the platforms this change affects.
+        Always at least two. If only one platform is affected, stop: the change
+        belongs in that platform's own spec store.
+      - **Why**: 1-3 sentences on the problem or need.
+      - **What Changes**: Short bullet list of behavior or contract changes.
+        Mark each breaking bullet with **BREAKING**.
       - **Capabilities**: Which specs are created or modified:
         - **New Capabilities**: Each becomes `specs/<capability-path>/spec.md`.
-          Name it for a durable behavior (e.g. `user-auth`), not the work in
-          this change. Use kebab-case and follow existing spec organization.
-        - **Modified Capabilities**: Existing capabilities whose REQUIREMENTS
-          change. Use the exact path under `openspec/specs/`. Each needs a
-          delta spec. Leave empty if none.
+          Name each for a durable behavior (for example, `user-auth`), not the
+          work in this change. Use kebab-case path segments and follow the
+          existing spec organization.
+        - **Modified Capabilities**: Existing capabilities whose requirements
+          change. Use the exact existing path under `openspec/specs/`. Each needs
+          a delta spec.
 
-      No Impact section, no design notes, no rollout plan.
-
-      Before filling in Capabilities, research existing specs: run
-      `openspec list --specs`, then `openspec show "<spec-id>" --type spec
-      --json --no-scenarios` for related ones (append `--store "<id>"` only for
-      a registered standalone store; keep `--type spec`). Read each relevant
-      spec in full with `openspec show "<spec-id>" --type spec` before deciding
-      what changes. Reuse an existing capability's exact path instead of
+      Research existing specs before filling in Capabilities: run
+      `openspec list --specs`, then `openspec show "<spec-id>" --type spec`
+      for any related spec. Append `--store "<id>"` only for a registered
+      standalone store. Reuse an existing capability's exact path instead of
       inventing a near-duplicate.
 
-      Every change must declare at least one capability (new or modified) or
-      set `skip_specs: true` in its `.openspec.yaml` - only for changes with no
-      spec-level behavior change. Do not invent a requirement to pass validation.
-    requires: []
+      Every change must declare at least one capability. Do not invent a
+      requirement just to satisfy validation.
+
+      Keep the whole proposal well under one page. No Impact section, no
+      implementation notes, no migration steps beyond what the Breaking Change
+      section needs.
+    requires:
+      - decisions
 
   - id: specs
     generates: "specs/**/*.md"
@@ -57,6 +80,11 @@ artifacts:
       Create specification files that define WHAT the system should do.
 
       A spec is a behavior contract, not an implementation plan.
+
+      Base the specs on the proposal and decisions.md. Do not introduce
+      behavior that contradicts decisions.md or that it does not cover; if
+      something is missing, stop and run the careful-planning skill again for the
+      open point.
 
       Good spec content:
       - Observable behavior users or downstream systems rely on
@@ -68,7 +96,7 @@ artifacts:
       - Internal class/function names
       - Library or framework choices
       - Step-by-step implementation details
-      - Detailed execution plans (each platform owns those in its own repo)
+      - Platform-specific behavior or implementation details
 
       Quick test: if the implementation can change without changing externally
       visible behavior, it likely does not belong in the spec.
@@ -107,7 +135,6 @@ artifacts:
       - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
       - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`). Using 3 hashtags or bullets will fail silently.
       - Every requirement MUST have at least one scenario.
-      - Every scenario MUST have a WHEN/GIVEN step (its trigger) and a THEN step (its outcome). A scenario with only AND lines or plain prose still counts as a scenario, but `openspec validate` flags it as a warning: normal validation still passes, but `openspec validate --strict` fails on it.
       - Keep each requirement's description (the text between `### Requirement:` and its first scenario) to 500 characters or fewer. `openspec validate` flags longer descriptions in ADDED requirements and in the main spec. This is a warning: normal validation still passes, but `openspec validate --strict` fails on it. When writing a new requirement, state one behavior per requirement: move examples and edge cases into scenarios, and split a requirement that covers several behaviors into separate `### Requirement:` blocks, each with its own scenarios. Under MODIFIED, keep the existing requirement block whole; never split, trim or rewrite existing text just to meet the length. Split an existing long requirement only when the user asks for it, in a change made for that purpose: under MODIFIED, keep its header and every scenario and cut its description down to one behavior without changing its meaning, then add each behavior you removed as its own ADDED requirement with its own scenarios.
 
       New capabilities only: the delta spec's first section is `## Purpose` -
@@ -163,11 +190,10 @@ artifacts:
     requires:
       - proposal
 
-
 apply:
   requires: [specs]
+  tracks: null
   instruction: |
-    Nothing is implemented in this store. Once the proposal and specs are
-    agreed, each targeted platform implements them in its own repository.
-    Validate the change (`openspec validate --strict`) and archive it when the
-    specs are final.
+    This store has no implementation work. Once the proposal and specs are
+    approved, sync or archive the change so the delta specs merge into the
+    shared main specs. Each platform implements the change in its own repo.
