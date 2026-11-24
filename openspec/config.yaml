@@ -1,12 +1,15 @@
-schema: spec-driven
+schema: shared-specs-only
 
 context: |
-  Shared, cross-cutting specifications for Csuporka.
-  Every spec here applies to both platforms: backend and mobile apps.
+  Shared, cross-cutting specifications for Csuporka (main specs + delta specs only).
+  Every change targets at least two platforms (e.g. backend, mobile apps).
+  No implementation lives here: no design.md, no tasks.md.
   Platform-specific behavior belongs in that platform's own spec store, never here.
 
 rules:
   proposal:
-    - Only propose a change here if it affects both platforms; otherwise move it to the platform's own store
+    - Keep it short - what changes and why, no implementation details
+    - Lead with whether it is a breaking change that all targeted platforms must migrate to
+    - List every targeted platform; if only one, move the change to that platform's store
   specs:
     - Describe shared behavior and contracts only, with no platform-specific implementation details
