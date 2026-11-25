@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Breakdown</title>
+<style>
+:root {
+  --bg: #f6f6f3; --surface: #ffffff; --surface-2: #efefeb; --text: #1b1b19; --muted: #6b6b66;
+  --line: #d9d9d3; --edge: #b9b9b2; --edge-hi: #1b1b19; --accent: #d9480f; --shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 14px rgba(0,0,0,.05);
+  --font: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131312; --surface: #1d1d1b; --surface-2: #262624; --text: #ecece8; --muted: #9a9a93;
+    --line: #34342f; --edge: #4a4a44; --edge-hi: #ecece8; --accent: #ff8a4c; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--text); font: 14px/1.45 var(--font); display: flex; flex-direction: column; }
+header { padding: 18px 24px 14px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: flex-end; }
+header h1 { margin: 0; font-size: 20px; letter-spacing: -.01em; }
+header .sub { color: var(--muted); margin-top: 2px; max-width: 60ch; }
+.stats { display: flex; gap: 22px; margin-left: auto; }
+.stat b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.toolbar { padding: 10px 24px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; border-bottom: 1px solid var(--line); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.toolbar label { margin-left: auto; display: inline-flex; gap: 6px; align-items: center; font-size: 13px; cursor: pointer; user-select: none; }
+.hint { color: var(--muted); font-size: 12.5px; }
+main { flex: 1; display: flex; min-height: 0; }
+.scroller { flex: 1; overflow: auto; position: relative; }
+.canvas { position: relative; display: inline-flex; gap: 76px; padding: 20px 32px 40px; min-width: 100%; }
+svg.edges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.col { width: 224px; flex: none; display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 1; }
+.col h2 { margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; display: flex; justify-content: space-between; }
+.col h2 em { font-style: normal; color: var(--text); }
+.node { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 8px; padding: 9px 11px; cursor: pointer; box-shadow: var(--shadow); transition: opacity .15s, transform .15s, border-color .15s; text-align: left; font: inherit; color: inherit; width: 100%; }
+.node:hover { transform: translateY(-1px); }
+.node:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.node .t { font-weight: 600; font-size: 13.5px; line-height: 1.3; }
+.node .m { display: flex; justify-content: space-between; gap: 8px; margin-top: 5px; font-size: 11.5px; color: var(--muted); }
+.node .m code { font-family: var(--mono); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.size { font-family: var(--mono); font-weight: 700; padding: 0 5px; border-radius: 4px; background: var(--surface-2); color: var(--text); flex: none; }
+.dim .node { opacity: .28; }
+.dim .node.sel, .dim .node.dep, .dim .node.unl { opacity: 1; }
+.dim .node.dep2, .dim .node.unl2 { opacity: .7; }
+.node.sel { border-color: var(--edge-hi); border-left-color: var(--c); box-shadow: 0 0 0 2px var(--edge-hi), var(--shadow); }
+.node.crit { box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
+path.e { fill: none; stroke: var(--edge); stroke-width: 1.4; transition: opacity .15s; }
+.dim path.e { opacity: .12; }
+.dim path.e.up, .dim path.e.down { opacity: 1; stroke: var(--edge-hi); stroke-width: 2; }
+.dim path.e.down { stroke: var(--accent); }
+path.e.crit { stroke: var(--accent); stroke-width: 2.2; }
+aside { width: 340px; flex: none; border-left: 1px solid var(--line); background: var(--surface); overflow: auto; padding: 20px 22px; }
+aside .empty { color: var(--muted); }
+aside h3 { margin: 6px 0 4px; font-size: 18px; line-height: 1.3; }
+aside .area { display: inline-flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--muted); }
+aside .area i { width: 10px; height: 10px; border-radius: 3px; }
+aside dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 14px 0; font-size: 13px; }
+aside dt { color: var(--muted); }
+aside dd { margin: 0; }
+aside dd code { font-family: var(--mono); font-size: 12px; }
+aside h4 { margin: 18px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+aside p { margin: 0; }
+.links { display: flex; flex-direction: column; gap: 4px; }
+.links button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 6px; background: var(--surface-2); font-size: 13px; }
+.links button:hover { outline: 1px solid var(--line); }
+.links button i { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+.links .none { color: var(--muted); font-size: 13px; }
+.legend-key { margin-top: 22px; font-size: 12px; color: var(--muted); display: grid; gap: 4px; }
+.legend-key span::before { content: ""; display: inline-block; width: 18px; height: 2px; vertical-align: middle; margin-right: 8px; background: var(--k); }
+@media (max-width: 860px) {
+  main { flex-direction: column; }
+  aside { width: auto; border-left: 0; border-top: 1px solid var(--line); max-height: 45vh; }
+  header, .toolbar { padding-left: 16px; padding-right: 16px; }
+  .stats { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1 id="title">Project Breakdown</h1>
+    <div class="sub" id="summary"></div>
+  </div>
+  <div class="stats" id="stats"></div>
+</header>
+<div class="toolbar">
+  <div class="legend" id="legend"></div>
+  <label><input type="checkbox" id="crit"> Critical path</label>
+  <span class="hint">Click a chunk · Esc to clear</span>
+</div>
+<main>
+  <div class="scroller" id="scroller">
+    <div class="canvas" id="canvas"><svg class="edges" id="edges"></svg></div>
+  </div>
+  <aside id="panel"><p class="empty">Select a chunk to see what it depends on, what it unlocks, and its summary.</p></aside>
+</main>
+<script>
+const DATA = {"project": {"name": "Csuporka", "summary": "Household meal-planning app: shared recipes, weekly planner, daily cooking screen and auto-generated grocery list. Android + iOS (Compose Multiplatform), Kotlin/Spring Boot backend, Supabase Postgres. Pet project: runs locally, no deployment in v1."}, "areas": [{"id": "contract", "name": "API Contract"}, {"id": "backend", "name": "Backend (Spring Boot)"}, {"id": "mobile", "name": "Mobile (Compose Multiplatform)"}], "criticalPath": ["api-contract", "be-auth", "be-households", "be-recipes", "be-meal-plan", "be-grocery", "mob-integration"], "chunks": [{"id": "api-contract", "title": "API contract (REST + real-time events)", "area": "contract", "size": "M", "summary": "OpenAPI spec written first (YAML in the backend repo) for all v1 resources (auth, account, households, recipes, saved videos, website import and video link preview, plan, grocery), ProblemDetail error model with codes, auth/refresh flow, and the real-time change-notice catalogue (JSON Schema).", "doneWhen": "Spec validates, covers every in-scope feature, and generates/compiles models for mobile; the backend's springdoc output is checked against it.", "dependsOn": [], "wave": 1, "unlocks": ["be-auth", "mob-api-fakes"], "file": "chunks/01-api-contract.md"}, {"id": "be-scaffolding", "title": "Backend scaffolding & architecture", "area": "backend", "size": "M", "summary": "Migrate the Spring Initializr skeleton to the modular-monolith layout (build-logic, version catalog, :app, :common, business modules), JPA + Flyway on the Supabase session pooler, ProblemDetail error handling, logging + Sentry, in-process events with the Spring Modulith registry, embedded-Postgres test setup, GitHub Actions CI.", "doneWhen": "Service boots locally against Supabase with a health endpoint and an empty migration; ./gradlew build passes with an embedded-Postgres integration test, locally and on GitHub Actions.", "dependsOn": [], "wave": 1, "unlocks": ["be-auth"], "file": "chunks/02-be-scaffolding.md"}, {"id": "mob-scaffolding", "title": "Mobile scaffolding & app shell", "area": "mobile", "size": "M", "summary": "Compose Multiplatform project for Android + iOS, module structure, DI, navigation shell (bottom nav, routes incl. deep-link entry), layouts for the three phone sizes, Hungarian string resources, CI build (Android on GitHub Actions); feature modules, MVI, Koin, navigation-compose.", "doneWhen": "Both apps build and launch locally, navigating between placeholder tabs on all three phone sizes; the Android build passes on GitHub Actions.", "dependsOn": [], "wave": 1, "unlocks": ["mob-design-system", "mob-api-fakes"], "file": "chunks/03-mob-scaffolding.md"}, {"id": "be-auth", "title": "Backend authentication", "area": "backend", "size": "L", "summary": "Users (name, email, password), registration and login, JWT access (50 min, HS256) + opaque refresh (30 days) with rotation, per-device families and reuse detection, logout, security filter chain.", "doneWhen": "All auth endpoints from the contract pass tests, including refresh rotation, reuse detection revoking only that device's family, expiry and logout.", "dependsOn": ["api-contract", "be-scaffolding"], "wave": 2, "unlocks": ["be-households", "be-recipe-import"], "file": "chunks/04-be-auth.md"}, {"id": "mob-api-fakes", "title": "Mobile data layer & fake API", "area": "mobile", "size": "M", "summary": "Contract models, repository interfaces, HTTP client abstraction and error model, and fake implementations with realistic data, latency and error cases, plus a fake real-time event stream and fake connectivity state.", "doneWhen": "Every contract operation has a fake behind a repository, switchable at build time, including its error cases (tests in mob-tests).", "dependsOn": ["api-contract", "mob-scaffolding"], "wave": 2, "unlocks": ["mob-auth", "mob-households", "mob-recipe-library", "mob-recipe-editor", "mob-planner", "mob-today", "mob-grocery", "mob-offline-cache", "mob-realtime-client"], "file": "chunks/05-mob-api-fakes.md"}, {"id": "mob-design-system", "title": "Mobile design system (Kamra, refined)", "area": "mobile", "size": "M", "summary": "Light/dark tokens, Fredoka + Nunito typography, brand assets and base components from the Figma Design System page: buttons, chips, tags, cards, fields, list rows, sheets, dialogs, toggles, segmented control, empty states, toast, offline banner.", "doneWhen": "A component catalogue screen shows every base component in light and dark on the three phone sizes, matching the Figma Design System page.", "dependsOn": ["mob-scaffolding"], "wave": 2, "unlocks": ["mob-auth", "mob-households", "mob-recipe-library", "mob-recipe-editor", "mob-planner", "mob-today", "mob-grocery"], "file": "chunks/06-mob-design-system.md"}, {"id": "be-households", "title": "Backend households & membership", "area": "backend", "size": "M", "summary": "Household of one for every user (created at registration, named via \"Létrehozás\"), QR invite tokens (24 h, reusable, a new one revokes the old), join with merge of the joiner's recipes and saved videos, membership query for other modules.", "doneWhen": "Household endpoints pass tests; non-members are denied; join merges recipes and videos and replaces the joiner's plan.", "dependsOn": ["be-auth"], "wave": 3, "unlocks": ["be-realtime", "be-recipes"], "file": "chunks/07-be-households.md"}, {"id": "be-recipe-import", "title": "Backend website recipe import & video link preview", "area": "backend", "size": "M", "summary": "Fetch a URL safely and extract a recipe draft from schema.org Recipe structured data (JSON-LD/microdata), normalizing ingredients into quantity/unit/name; clear error when nothing is found. Read the title and thumbnail of a video link for saved videos.", "doneWhen": "Import endpoint returns correct drafts for a fixture set of real recipe sites (incl. Hungarian ones) and the specified error for pages without recipe data; link preview returns title and thumbnail for common video sites (YouTube, TikTok, Facebook) and an empty preview otherwise.", "dependsOn": ["be-auth"], "wave": 3, "unlocks": ["mob-integration"], "file": "chunks/08-be-recipe-import.md"}, {"id": "mob-auth", "title": "Mobile authentication", "area": "mobile", "size": "L", "summary": "Welcome, login and register screens (email and password only), secure token storage, automatic refresh and retry, logout, session state driving navigation.", "doneWhen": "All auth flows work end to end against the fake API on Android and iOS, including refresh and forced logout.", "dependsOn": ["mob-api-fakes", "mob-design-system"], "wave": 3, "unlocks": ["mob-tests"], "file": "chunks/09-mob-auth.md"}, {"id": "mob-grocery", "title": "Mobile grocery list", "area": "mobile", "size": "M", "summary": "Week grocery list with shared tick-off, per-recipe and in-store (merged) views, week navigation (any past week), video meals, offline ticking, empty state, live tick updates from the fake event stream.", "doneWhen": "Both views work against the fake API with ticks syncing via fake events, including a video meal, past weeks and offline ticking with the fake connectivity state.", "dependsOn": ["mob-api-fakes", "mob-design-system"], "wave": 3, "unlocks": ["mob-tests"], "file": "chunks/10-mob-grocery.md"}, {"id": "mob-households", "title": "Mobile households, profile & account", "area": "mobile", "size": "M", "summary": "Onboarding choice (create / join by QR / solo), create household, invite QR display, camera QR scanner, join confirmation, profile with planning-reminder settings (stored on the phone), theme and logout.", "doneWhen": "All household and profile flows work against the fake API on both platforms, including camera scanning on devices.", "dependsOn": ["mob-api-fakes", "mob-design-system"], "wave": 3, "unlocks": ["mob-tests"], "file": "chunks/11-mob-households.md"}, {"id": "mob-offline-cache", "title": "Mobile offline cache", "area": "mobile", "size": "M", "summary": "Local database caching all stored recipes, the saved video list, the current week's plan and grocery list; an offline write queue for grocery ticks and cooked marks; connectivity monitoring replacing the fake connectivity state; read-only signalling for everything else; cache refresh and expiry.", "doneWhen": "With network off, all recipes, the saved video list, this week's plan and the grocery list load from cache on both platforms; grocery ticks and cooked marks are queued and sync on reconnect; other edits are blocked with the offline banner.", "dependsOn": ["mob-api-fakes"], "wave": 3, "unlocks": ["mob-tests"], "file": "chunks/12-mob-offline-cache.md"}, {"id": "mob-planner", "title": "Mobile weekly planner", "area": "mobile", "size": "L", "summary": "Week view opened from Today, week navigation (past weeks, this week, next week), adding a recipe or saved video as a meal (cook day + 1–3 days), overlap warning, removing and editing meals, cook status tags, live updates, empty and offline states; accepts a target week for deep links.", "doneWhen": "All planner flows work against the fake API on all phone sizes, including crossing into next week, overlap replace, and opening a specific week by route.", "dependsOn": ["mob-api-fakes", "mob-design-system"], "wave": 3, "unlocks": ["mob-reminder"], "file": "chunks/13-mob-planner.md"}, {"id": "mob-realtime-client", "title": "Mobile real-time sync client", "area": "mobile", "size": "M", "summary": "Raw WebSocket client with the access token in the handshake header, lifecycle tied to app foreground/background, reconnect with backoff and refetch of visible data, turning change notices into repository refreshes in place of the fake stream.", "doneWhen": "Against a local mock server, change notices refresh repositories, reconnects refetch, and the connection closes in background on both platforms (checked by hand).", "dependsOn": ["mob-api-fakes"], "wave": 3, "unlocks": ["mob-tests"], "file": "chunks/14-mob-realtime-client.md"}, {"id": "mob-recipe-editor", "title": "Mobile recipe editor, website import & saving videos", "area": "mobile", "size": "L", "summary": "New-recipe source sheet; manual create/edit/delete; paste-a-link website import with loading, failure and review-before-save states; saving a video link with title and thumbnail; making a recipe from a video.", "doneWhen": "Create, edit, delete, website import (success + failure), saving a video link (with and without a preview) and recipe-from-video work against the fake API on both platforms.", "dependsOn": ["mob-api-fakes", "mob-design-system"], "wave": 3, "unlocks": ["mob-tests"], "file": "chunks/15-mob-recipe-editor.md"}, {"id": "mob-recipe-library", "title": "Mobile recipe library, details & saved videos", "area": "mobile", "size": "L", "summary": "Recipe library with search and Kedvencek / Újdonság filters, recipe details with servings stepper, ingredients, video and steps; saved videos list, full-screen player and video menu; empty states.", "doneWhen": "Library, details, saved videos, the player and its fallback work against the fake API on all phone sizes, with live updates from the fake event stream.", "dependsOn": ["mob-api-fakes", "mob-design-system"], "wave": 3, "unlocks": ["mob-tests"], "file": "chunks/16-mob-recipe-library.md"}, {"id": "mob-today", "title": "Mobile daily cooking screen", "area": "mobile", "size": "M", "summary": "Today screen (the Tervező tab's first screen): week strip, cook / leftover / done / empty states with shared status logic, expandable cook-day card, video meals, marking as cooked, the \"Ízlett?\" card, navigation to recipe details or the video.", "doneWhen": "The status logic handles every carry-over and cooked combination and the screen works against the fake API on both platforms (tests in mob-tests).", "dependsOn": ["mob-api-fakes", "mob-design-system"], "wave": 3, "unlocks": ["mob-tests"], "file": "chunks/17-mob-today.md"}, {"id": "be-realtime", "title": "Backend real-time sync server", "area": "backend", "size": "M", "summary": "Raw WebSocket endpoint authenticated at the handshake, per-household channels, broadcasting change notices for domain events after commit; clients refetch on reconnect (no server-side event log).", "doneWhen": "A test client connected as a household member receives change notices for events published in-process; non-members and invalid tokens are rejected at the handshake.", "dependsOn": ["be-households"], "wave": 4, "unlocks": ["mob-integration"], "file": "chunks/18-be-realtime.md"}, {"id": "be-recipes", "title": "Backend recipes & saved videos", "area": "backend", "size": "M", "summary": "Household recipe CRUD with ingredients, quantities, units and steps; household-wide Kedvencek / Újdonság status and the \"Ízlett?\" answer (Nem ízlett = soft delete, undo while the toast shows); saved videos; publishes change events.", "doneWhen": "Recipe, video and status endpoints pass integration tests with household scoping and emitted events.", "dependsOn": ["be-households"], "wave": 4, "unlocks": ["be-meal-plan"], "file": "chunks/19-be-recipes.md"}, {"id": "mob-reminder", "title": "Mobile planning reminder (local notification) & deep link", "area": "mobile", "size": "M", "summary": "Weekly planning reminder as a local notification scheduled on the phone (day and time from the phone's settings, default Sunday 18:00), cancelled while next week is fully planned and rescheduled on every plan change; tapping opens next week in the planner from cold and warm start.", "doneWhen": "On both platforms the reminder fires at the chosen time when next week isn't fully planned, is cancelled when it is, and opens the planner on next week.", "dependsOn": ["mob-planner"], "wave": 4, "unlocks": ["mob-tests"], "file": "chunks/20-mob-reminder.md"}, {"id": "be-meal-plan", "title": "Backend weekly meal plan", "area": "backend", "size": "M", "summary": "Week plans per household: meals (a recipe or saved video with a cook day and a length of 1–3 days), overlap replace, remove, change length, replace recipe, past/this/next week queries, cooked state with idempotent mark/unmark; publishes change events.", "doneWhen": "Plan endpoints pass integration tests across week boundaries (incl. a meal crossing into next week and overlap replace), with events emitted.", "dependsOn": ["be-recipes"], "wave": 5, "unlocks": ["be-grocery"], "file": "chunks/21-be-meal-plan.md"}, {"id": "mob-tests", "title": "Mobile tests", "area": "mobile", "size": "L", "summary": "The mobile app's tests written in one go after the feature chunks: unit (status logic, ViewModels, validators, mappers), integration with Ktor MockEngine (data sources, token refresh, offline queue), real-time client against a mock server, UI tests; Android host tests added to CI.", "doneWhen": "Every item above has tests that are green on Android (host) and the iOS simulator, and the Android host tests pass on GitHub Actions.", "dependsOn": ["mob-auth", "mob-households", "mob-recipe-library", "mob-recipe-editor", "mob-today", "mob-grocery", "mob-offline-cache", "mob-realtime-client", "mob-reminder"], "wave": 5, "unlocks": ["mob-integration"], "file": "chunks/22-mob-tests.md"}, {"id": "be-grocery", "title": "Backend grocery list", "area": "backend", "size": "M", "summary": "Generate the week's grocery list from the plan using each recipe's own amounts, count multi-day meals once, per-recipe and merged views with one shared tick per line for both views (idempotent ticks; a changed amount unticks the line), video meals as links; regenerates on plan/recipe change.", "doneWhen": "Grocery endpoints pass tests for grouping in the merged view, multi-day dedupe, cross-week meals, video meals, tick persistence (one tick shown in both views) and regeneration after plan edits.", "dependsOn": ["be-meal-plan"], "wave": 6, "unlocks": ["mob-integration"], "file": "chunks/23-be-grocery.md"}, {"id": "mob-integration", "title": "Mobile ↔ real backend integration", "area": "mobile", "size": "L", "summary": "Replace fakes with the real HTTP and real-time implementations against the backend running locally on the Supabase database, verify every flow end to end on both platforms, fix contract drift, multi-device household sync check.", "doneWhen": "All v1 flows pass an end-to-end checklist on Android and iOS against the locally running backend, including two devices syncing in one household and offline mode.", "dependsOn": ["mob-tests", "be-realtime", "be-recipe-import", "be-grocery"], "wave": 7, "unlocks": [], "file": "chunks/24-mob-integration.md"}]};
+// Area colors. Orange is reserved for the "unlocks" / critical-path highlight.
+const PALETTE = ["#2f6fdb", "#1f9d6b", "#8b5cf6", "#c2255c", "#0b8ea6", "#b8860b", "#5c7cfa", "#2b8a3e", "#7048e8", "#a61e4d", "#868e96", "#3d5a80"];
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+const areaColor = {}, areaName = {};
+DATA.areas.forEach((a, i) => { areaColor[a.id] = a.color || PALETTE[i % PALETTE.length]; areaName[a.id] = a.name; });
+const byId = Object.fromEntries(DATA.chunks.map((c) => [c.id, c]));
+const waves = Math.max(...DATA.chunks.map((c) => c.wave));
+const crit = new Set(DATA.criticalPath);
+const critEdges = new Set(DATA.criticalPath.slice(1).map((id, i) => DATA.criticalPath[i] + ">" + id));
+
+document.title = (DATA.project.name || "Project") + " · Breakdown";
+$("title").textContent = (DATA.project.name || "Project") + " — Breakdown";
+$("summary").textContent = DATA.project.summary || "";
+const cols = [];
+for (let w = 1; w <= waves; w++) cols.push(DATA.chunks.filter((c) => c.wave === w));
+const maxPar = Math.max(...cols.map((c) => c.length));
+$("stats").innerHTML = [[DATA.chunks.length, "Chunks"], [waves, "Waves"], [cols[0].length, "Start in parallel"], [maxPar, "Max parallel"]]
+  .map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
+$("legend").innerHTML = DATA.areas.map((a) => `<span><i style="background:${areaColor[a.id]}"></i>${esc(a.name)}</span>`).join("");
+
+// Order nodes within each wave to reduce edge crossings (barycenter heuristic).
+const areaIdx = Object.fromEntries(DATA.areas.map((a, i) => [a.id, i]));
+cols.forEach((col) => col.sort((a, b) => areaIdx[a.area] - areaIdx[b.area] || a.id.localeCompare(b.id)));
+const pos = {};
+const index = () => cols.forEach((col) => col.forEach((c, i) => (pos[c.id] = i / Math.max(1, col.length - 1))));
+const bary = (c, ids) => (ids.length ? ids.reduce((s, id) => s + pos[id], 0) / ids.length : pos[c.id]);
+index();
+for (let pass = 0; pass < 4; pass++) {
+  for (let w = 1; w < cols.length; w++) { cols[w].sort((a, b) => bary(a, a.dependsOn) - bary(b, b.dependsOn) || areaIdx[a.area] - areaIdx[b.area]); index(); }
+  for (let w = cols.length - 2; w >= 0; w--) { cols[w].sort((a, b) => bary(a, a.unlocks) - bary(b, b.unlocks) || areaIdx[a.area] - areaIdx[b.area]); index(); }
+}
+
+const canvas = $("canvas"), svg = $("edges");
+const nodes = {};
+cols.forEach((col, i) => {
+  const el = document.createElement("div");
+  el.className = "col";
+  el.innerHTML = `<h2>Wave ${i + 1} <em>${col.length} parallel</em></h2>`;
+  col.forEach((c) => {
+    const b = document.createElement("button");
+    b.className = "node";
+    b.style.setProperty("--c", areaColor[c.area]);
+    b.innerHTML = `<div class="t">${esc(c.title)}</div><div class="m"><code>${esc(c.id)}</code><span class="size">${esc(c.size)}</span></div>`;
+    b.onclick = (e) => { e.stopPropagation(); select(selected === c.id ? null : c.id); };
+    nodes[c.id] = b;
+    el.appendChild(b);
+  });
+  canvas.appendChild(el);
+});
+
+const edges = [];
+DATA.chunks.forEach((c) => c.dependsOn.forEach((d) => edges.push({ from: d, to: c.id })));
+svg.innerHTML = `<defs>
+  <marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--edge)"/></marker>
+  <marker id="ah-hi" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--edge-hi)"/></marker>
+  <marker id="ah-acc" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--accent)"/></marker>
+</defs>` + edges.map((e) => `<path class="e" data-k="${esc(e.from + ">" + e.to)}" marker-end="url(#ah)"/>`).join("");
+const paths = [...svg.querySelectorAll("path.e")];
+
+function layoutEdges() {
+  const base = canvas.getBoundingClientRect();
+  svg.setAttribute("width", canvas.scrollWidth);
+  svg.setAttribute("height", canvas.scrollHeight);
+  paths.forEach((p, i) => {
+    const a = nodes[edges[i].from].getBoundingClientRect(), b = nodes[edges[i].to].getBoundingClientRect();
+    const x1 = a.right - base.left, y1 = a.top + a.height / 2 - base.top;
+    const x2 = b.left - base.left - 2, y2 = b.top + b.height / 2 - base.top;
+    const dx = Math.max(30, (x2 - x1) * 0.45);
+    p.setAttribute("d", `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`);
+  });
+}
+
+function closure(id, key) {
+  const out = new Set(), stack = [...byId[id][key]];
+  while (stack.length) { const n = stack.pop(); if (!out.has(n)) { out.add(n); stack.push(...byId[n][key]); } }
+  return out;
+}
+
+let selected = null;
+function select(id) {
+  selected = id;
+  canvas.classList.toggle("dim", !!id);
+  Object.values(nodes).forEach((n) => n.classList.remove("sel", "dep", "dep2", "unl", "unl2"));
+  paths.forEach((p) => { p.classList.remove("up", "down"); p.setAttribute("marker-end", markerFor(p)); });
+  if (!id) { $("panel").innerHTML = `<p class="empty">Select a chunk to see what it depends on, what it unlocks, and its summary.</p>`; return; }
+  const c = byId[id], up = closure(id, "dependsOn"), down = closure(id, "unlocks");
+  nodes[id].classList.add("sel");
+  up.forEach((n) => nodes[n].classList.add(c.dependsOn.includes(n) ? "dep" : "dep2"));
+  down.forEach((n) => nodes[n].classList.add(c.unlocks.includes(n) ? "unl" : "unl2"));
+  const upSet = new Set([...up, id]), downSet = new Set([...down, id]);
+  paths.forEach((p, i) => {
+    const e = edges[i];
+    if (upSet.has(e.from) && upSet.has(e.to) && (up.has(e.from))) { p.classList.add("up"); p.setAttribute("marker-end", "url(#ah-hi)"); }
+    if (downSet.has(e.from) && downSet.has(e.to) && down.has(e.to)) { p.classList.add("down"); p.setAttribute("marker-end", "url(#ah-acc)"); }
+  });
+  renderPanel(c, up, down);
+}
+
+function markerFor(p) { return $("crit").checked && p.classList.contains("crit") ? "url(#ah-acc)" : "url(#ah)"; }
+
+function linkList(ids, direct) {
+  if (!ids.length) return `<div class="none">None</div>`;
+  return `<div class="links">${ids.map((n) => `<button data-go="${esc(n)}"><i style="background:${areaColor[byId[n].area]}"></i>${esc(byId[n].title)}</button>`).join("")}</div>`;
+}
+
+function renderPanel(c, up, down) {
+  $("panel").innerHTML = `
+    <span class="area"><i style="background:${areaColor[c.area]}"></i>${esc(areaName[c.area])}</span>
+    <h3>${esc(c.title)}</h3>
+    <dl>
+      <dt>ID</dt><dd><code>${esc(c.id)}</code></dd>
+      <dt>Size</dt><dd>${esc(c.size)}</dd>
+      <dt>Wave</dt><dd>${c.wave} of ${waves}</dd>
+      <dt>File</dt><dd><code>${esc(c.file)}</code></dd>
+    </dl>
+    ${c.summary ? `<h4>Summary</h4><p>${esc(c.summary)}</p>` : ""}
+    ${c.doneWhen ? `<h4>Done when</h4><p>${esc(c.doneWhen)}</p>` : ""}
+    <h4>Depends on (${c.dependsOn.length}${up.size > c.dependsOn.length ? `, ${up.size} incl. indirect` : ""})</h4>
+    ${linkList(c.dependsOn)}
+    <h4>Unlocks (${c.unlocks.length}${down.size > c.unlocks.length ? `, ${down.size} incl. indirect` : ""})</h4>
+    ${linkList(c.unlocks)}
+    <div class="legend-key"><span style="--k:var(--edge-hi)">Path from its dependencies</span><span style="--k:var(--accent)">Path to what it unlocks</span></div>`;
+  $("panel").querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => { select(b.dataset.go); nodes[b.dataset.go].scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" }); }));
+}
+
+paths.forEach((p, i) => { if (critEdges.has(edges[i].from + ">" + edges[i].to)) p.classList.add("crit-cand"); });
+$("crit").onchange = () => {
+  const on = $("crit").checked;
+  Object.entries(nodes).forEach(([id, n]) => n.classList.toggle("crit", on && crit.has(id)));
+  paths.forEach((p) => { p.classList.toggle("crit", on && p.classList.contains("crit-cand")); if (!p.classList.contains("up") && !p.classList.contains("down")) p.setAttribute("marker-end", markerFor(p)); });
+};
+$("scroller").onclick = () => select(null);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") select(null); });
+new ResizeObserver(layoutEdges).observe(canvas);
+window.addEventListener("load", layoutEdges);
+layoutEdges();
+</script>
+</body>
+</html>
