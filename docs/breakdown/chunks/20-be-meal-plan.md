@@ -6,8 +6,8 @@
 | Area | Backend (Spring Boot) |
 | Size | M |
 | Wave | 5 |
-| Depends on | `be-recipes` (recipes and videos to place on days) |
-| Unlocks | `be-grocery` |
+| Depends on | `be-recipes` (recipe and video references and their deletion events) |
+| Unlocks | `be-grocery`, `mob-plan-api` |
 
 ## Goal
 Week plans per household: meals (a recipe or saved video with a cook day and a length of 1–3 days), overlap replace, remove, change length, replace recipe, past/this/next week queries, cooked state; publishes change events.
@@ -24,23 +24,22 @@ Week plans per household: meals (a recipe or saved video with a cook day and a l
 - Publishing plan change events
 
 ## Out of scope
-- Cook/no-cook status computation (mob-today, client side)
-- Grocery generation (be-grocery)
+- Cook/no-cook status computation (`mob-today-ui`, client side)
+- Grocery generation (`be-grocery`)
 
 ## Builds on
-- be-recipes, household scoping
+- `be-recipes`, household scoping
+- Shared specs: `meal-plan`
 
 ## Provides
-- Plan data for grocery (read through a query interface in `:common`)
+- Plan data for grocery (read through a query interface in `:common`); endpoints for `mob-plan-api`
 
 ## Done when
 - Plan endpoints pass integration tests across week boundaries (incl. a meal crossing into next week and overlap replace), with events emitted.
 
 ## Decisions from the breakdown
 - Carry-over status is computed on the client so it works offline; backend stores meals (cook day + length) and the cooked mark
-- Weeks start on Monday
-- One time zone: Hungarian time (Europe/Budapest)
-
+- Weeks start on Monday; one time zone: Hungarian time (Europe/Budapest)
 - The planning reminder is a local notification on the phone; "planned" means every day of next week is covered, computed on the client (2026-11-23)
 
 ## Open questions for the deep-dive session

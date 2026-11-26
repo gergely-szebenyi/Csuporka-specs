@@ -1,13 +1,9 @@
 {
   "project": {
     "name": "Csuporka",
-    "summary": "Household meal-planning app: shared recipes, weekly planner, daily cooking screen and auto-generated grocery list. Android + iOS (Compose Multiplatform), Kotlin/Spring Boot backend, Supabase Postgres. Pet project: runs locally, no deployment in v1."
+    "summary": "Household meal-planning app: shared recipes, weekly planner, daily cooking screen and auto-generated grocery list. Android + iOS (Compose Multiplatform), Kotlin/Spring Boot backend, Supabase Postgres. Code-first API contract (springdoc), behavioral contract in the shared specs. Pet project: runs locally, no deployment in v1."
   },
   "areas": [
-    {
-      "id": "contract",
-      "name": "API Contract"
-    },
     {
       "id": "backend",
       "name": "Backend (Spring Boot)"
@@ -19,15 +15,6 @@
   ],
   "chunks": [
     {
-      "id": "api-contract",
-      "title": "API contract (REST + real-time events)",
-      "area": "contract",
-      "size": "M",
-      "summary": "OpenAPI spec written first (YAML in the backend repo) for all v1 resources (auth, account, households, recipes, saved videos, website import and video link preview, plan, grocery), ProblemDetail error model with codes, auth/refresh flow, and the real-time change-notice catalogue (JSON Schema).",
-      "doneWhen": "Spec validates, covers every in-scope feature, and generates/compiles models for mobile; the backend's springdoc output is checked against it.",
-      "dependsOn": []
-    },
-    {
       "id": "be-scaffolding",
       "title": "Backend scaffolding & architecture",
       "area": "backend",
@@ -37,15 +24,158 @@
       "dependsOn": []
     },
     {
+      "id": "mob-scaffolding",
+      "title": "Mobile scaffolding & app shell",
+      "area": "mobile",
+      "size": "M",
+      "summary": "Compose Multiplatform project for Android + iOS, module structure, DI, navigation shell (bottom nav, routes incl. deep-link entry), layouts for the three phone sizes, Hungarian string resources, CI build (Android on GitHub Actions); feature modules, MVI, Koin, navigation-compose; the conventions for repository interfaces and in-memory stubs every wave-3 UI chunk follows.",
+      "doneWhen": "Both apps build and launch locally, navigating between placeholder tabs on all three phone sizes; the Android build passes on GitHub Actions.",
+      "dependsOn": []
+    },
+    {
+      "id": "be-platform",
+      "title": "Backend platform utilities (security, springdoc, shared kernel)",
+      "area": "backend",
+      "size": "M",
+      "summary": "Cross-cutting utilities every backend feature builds on: the stateless security filter chain (JWT validation, public routes, 401/403 as ProblemDetail), the authenticated principal available to controllers, springdoc setup with the generated spec published for the mobile repo to sync, the shared error-code catalogue from the shared specs, and test helpers for authenticated requests.",
+      "doneWhen": "A sample protected endpoint rejects missing, expired and invalid tokens and accepts a test-minted one; the generated OpenAPI spec is produced by the build in the agreed location; ./gradlew build passes locally and on CI.",
+      "dependsOn": [
+        "be-scaffolding"
+      ]
+    },
+    {
+      "id": "mob-design-system",
+      "title": "Mobile design system (Kamra, refined)",
+      "area": "mobile",
+      "size": "M",
+      "summary": "Light/dark tokens, Fredoka + Nunito typography, brand assets and base components from the Figma Design System page: buttons, chips, tags, cards, fields, list rows, sheets, dialogs, toggles, segmented control, empty states, toast, offline banner.",
+      "doneWhen": "A component catalogue screen shows every base component in light and dark on the three phone sizes, matching the Figma Design System page.",
+      "dependsOn": [
+        "mob-scaffolding"
+      ]
+    },
+    {
       "id": "be-auth",
       "title": "Backend authentication",
       "area": "backend",
       "size": "L",
-      "summary": "Users (name, email, password), registration and login, JWT access (50 min, HS256) + opaque refresh (30 days) with rotation, per-device families and reuse detection, logout, security filter chain.",
-      "doneWhen": "All auth endpoints from the contract pass tests, including refresh rotation, reuse detection revoking only that device's family, expiry and logout.",
+      "summary": "Users (name, email, password), registration and login, JWT access (50 min, HS256) + opaque refresh (30 days) with rotation, per-device families and reuse detection, logout; issues the tokens the be-platform filter chain validates.",
+      "doneWhen": "All auth endpoints pass tests, including refresh rotation, reuse detection revoking only that device's family, expiry and logout, and they appear in the generated spec.",
       "dependsOn": [
-        "api-contract",
-        "be-scaffolding"
+        "be-platform"
+      ]
+    },
+    {
+      "id": "be-recipe-import",
+      "title": "Backend website recipe import & video link preview",
+      "area": "backend",
+      "size": "M",
+      "summary": "Fetch a URL safely and extract a recipe draft from schema.org Recipe structured data (JSON-LD/microdata), normalizing ingredients into quantity/unit/name; clear error when nothing is found. Read the title and thumbnail of a video link for saved videos.",
+      "doneWhen": "Import endpoint returns correct drafts for a fixture set of real recipe sites (incl. Hungarian ones) and the specified error for pages without recipe data; link preview returns title and thumbnail for common video sites (YouTube, TikTok, Facebook) and an empty preview otherwise.",
+      "dependsOn": [
+        "be-platform"
+      ]
+    },
+    {
+      "id": "mob-network",
+      "title": "Mobile networking foundation",
+      "area": "mobile",
+      "size": "M",
+      "summary": "Ktor client setup, DTO generation from the backend's springdoc spec (syncOpenApiSpec reworked to pull the generated spec), ProblemDetail → domain error mapping using the shared error codes, connectivity monitoring, base URL for emulators and devices on the local network.",
+      "doneWhen": "DTOs generate from the backend's current generated spec; a call to the backend's health/sample endpoint succeeds and an error response maps to a domain error on Android and iOS; connectivity state flips with network on/off.",
+      "dependsOn": [
+        "mob-scaffolding",
+        "be-platform"
+      ]
+    },
+    {
+      "id": "mob-auth-ui",
+      "title": "Mobile authentication UI",
+      "area": "mobile",
+      "size": "M",
+      "summary": "Welcome, login and register screens (email and password only) with validation, error states and the session state that drives navigation (signed out / signed in), on in-memory stubs behind repository interfaces.",
+      "doneWhen": "Register, login, failed login and logout flows work on the stub on Android and iOS, and session state switches the navigation graph.",
+      "dependsOn": [
+        "mob-design-system"
+      ]
+    },
+    {
+      "id": "mob-households-ui",
+      "title": "Mobile households, profile & account UI",
+      "area": "mobile",
+      "size": "M",
+      "summary": "Onboarding choice (create / join by QR / solo), create household, invite QR display, camera QR scanner, join confirmation, profile with planning-reminder settings (stored on the phone), theme and logout entry, on in-memory stubs behind repository interfaces.",
+      "doneWhen": "All household and profile flows work on the stub on both platforms, including camera scanning on devices.",
+      "dependsOn": [
+        "mob-design-system"
+      ]
+    },
+    {
+      "id": "mob-recipe-library-ui",
+      "title": "Mobile recipe library, details & saved videos UI",
+      "area": "mobile",
+      "size": "L",
+      "summary": "Recipe library with on-phone search and Kedvencek / Újdonság filters, recipe details with servings stepper, ingredients, video and steps; saved videos list, full-screen player and video menu; empty states; on in-memory stubs behind repository interfaces.",
+      "doneWhen": "Library, details, saved videos, the player and its fallback work on the stub on all three phone sizes.",
+      "dependsOn": [
+        "mob-design-system"
+      ]
+    },
+    {
+      "id": "mob-recipe-editor-ui",
+      "title": "Mobile recipe editor, website import & saving videos UI",
+      "area": "mobile",
+      "size": "L",
+      "summary": "New-recipe source sheet; manual create/edit/delete; paste-a-link website import with loading, failure and review-before-save states; saving a video link with title and thumbnail; making a recipe from a video; on in-memory stubs behind repository interfaces.",
+      "doneWhen": "Create, edit, delete, import (success + failure), saving a video link (with and without a preview) and recipe-from-video work on the stub on both platforms.",
+      "dependsOn": [
+        "mob-design-system"
+      ]
+    },
+    {
+      "id": "mob-planner-ui",
+      "title": "Mobile weekly planner UI",
+      "area": "mobile",
+      "size": "L",
+      "summary": "Week view opened from Today, week navigation (past, this, next week), adding a recipe or saved video as a meal (cook day + 1–3 days), overlap warning and replace, removing and editing meals, cook status tags, empty state; accepts a target week for deep links; planning rules in shared code, on in-memory stubs behind repository interfaces.",
+      "doneWhen": "All planner flows work on the stub on all phone sizes, including crossing into next week, overlap replace and opening a specific week by route.",
+      "dependsOn": [
+        "mob-design-system"
+      ]
+    },
+    {
+      "id": "mob-today-ui",
+      "title": "Mobile daily cooking screen UI",
+      "area": "mobile",
+      "size": "M",
+      "summary": "Today screen (the Tervező tab's first screen): week strip, cook / leftover / done / empty states driven by the shared status logic, expandable cook-day card, video meals, marking as cooked, the \"Ízlett?\" card, navigation to recipe details or the video; on in-memory stubs behind repository interfaces.",
+      "doneWhen": "The status logic handles every carry-over and cooked combination and the screen shows each state on the stub on both platforms.",
+      "dependsOn": [
+        "mob-design-system"
+      ]
+    },
+    {
+      "id": "mob-grocery-ui",
+      "title": "Mobile grocery list UI",
+      "area": "mobile",
+      "size": "M",
+      "summary": "Week grocery list with tick-off, per-recipe and in-store (merged) views, week navigation (any past week), video meals, empty state; on in-memory stubs behind repository interfaces.",
+      "doneWhen": "Both views, ticking, a video meal and past weeks work on the stub on both platforms.",
+      "dependsOn": [
+        "mob-design-system"
+      ]
+    },
+    {
+      "id": "mob-auth-api",
+      "title": "Mobile auth connected to the backend",
+      "area": "mobile",
+      "size": "M",
+      "summary": "Auth data layer behind the auth UI's repository interface using the generated DTOs, refresh token in encrypted platform storage and access token in memory, Ktor bearer auth with automatic refresh and retry, forced logout when refresh fails.",
+      "doneWhen": "Against the locally running backend, register, login, app restart with a stored session, token refresh and forced logout work on Android and iOS.",
+      "dependsOn": [
+        "mob-auth-ui",
+        "mob-network",
+        "be-auth"
       ]
     },
     {
@@ -53,21 +183,21 @@
       "title": "Backend households & membership",
       "area": "backend",
       "size": "M",
-      "summary": "Household of one for every user (created at registration, named via \"Létrehozás\"), QR invite tokens (24 h, reusable, a new one revokes the old), join with merge of the joiner's recipes and saved videos, membership query for other modules.",
+      "summary": "Household of one for every user (created by listening to the registration event in :common, named via \"Létrehozás\"), QR invite tokens (24 h, reusable, a new one revokes the old), join with merge of the joiner's recipes and saved videos, membership query for other modules.",
       "doneWhen": "Household endpoints pass tests; non-members are denied; join merges recipes and videos and replaces the joiner's plan.",
       "dependsOn": [
-        "be-auth"
+        "be-platform"
       ]
     },
     {
-      "id": "be-realtime",
-      "title": "Backend real-time sync server",
-      "area": "backend",
+      "id": "mob-reminder",
+      "title": "Mobile planning reminder (local notification) & deep link",
+      "area": "mobile",
       "size": "M",
-      "summary": "Raw WebSocket endpoint authenticated at the handshake, per-household channels, broadcasting change notices for domain events after commit; clients refetch on reconnect (no server-side event log).",
-      "doneWhen": "A test client connected as a household member receives change notices for events published in-process; non-members and invalid tokens are rejected at the handshake.",
+      "summary": "Weekly planning reminder as a local notification scheduled on the phone (day and time from the phone's settings, default Sunday 18:00), cancelled while next week is fully planned and rescheduled on every plan change; tapping opens next week in the planner from cold and warm start.",
+      "doneWhen": "On both platforms the reminder fires at the chosen time when next week isn't fully planned (on the planner's data source, stub or real), is cancelled when it is, and opens the planner on next week.",
       "dependsOn": [
-        "be-households"
+        "mob-planner-ui"
       ]
     },
     {
@@ -82,14 +212,27 @@
       ]
     },
     {
-      "id": "be-recipe-import",
-      "title": "Backend website recipe import & video link preview",
+      "id": "be-realtime",
+      "title": "Backend real-time sync server",
       "area": "backend",
       "size": "M",
-      "summary": "Fetch a URL safely and extract a recipe draft from schema.org Recipe structured data (JSON-LD/microdata), normalizing ingredients into quantity/unit/name; clear error when nothing is found. Read the title and thumbnail of a video link for saved videos.",
-      "doneWhen": "Import endpoint returns correct drafts for a fixture set of real recipe sites (incl. Hungarian ones) and the specified error for pages without recipe data; link preview returns title and thumbnail for common video sites (YouTube, TikTok, Facebook) and an empty preview otherwise.",
+      "summary": "Raw WebSocket endpoint authenticated at the handshake, per-household channels, broadcasting change notices for domain events after commit; clients refetch on reconnect (no server-side event log).",
+      "doneWhen": "A test client connected as a household member receives change notices for events published in-process; non-members and invalid tokens are rejected at the handshake.",
       "dependsOn": [
-        "be-auth"
+        "be-households"
+      ]
+    },
+    {
+      "id": "mob-households-api",
+      "title": "Mobile households & profile connected to the backend",
+      "area": "mobile",
+      "size": "M",
+      "summary": "Households data layer behind the existing interfaces: current user and household, create, invite QR, join with merge, members; logout through the real auth session.",
+      "doneWhen": "Against the local backend, create, invite, join (with recipe and video merge) and logout work on both platforms with two accounts.",
+      "dependsOn": [
+        "mob-households-ui",
+        "mob-auth-api",
+        "be-households"
       ]
     },
     {
@@ -104,22 +247,32 @@
       ]
     },
     {
-      "id": "mob-tests",
-      "title": "Mobile tests",
+      "id": "mob-recipes-api",
+      "title": "Mobile recipes, saved videos & import connected to the backend",
       "area": "mobile",
-      "size": "L",
-      "summary": "The mobile app's tests written in one go after the feature chunks: unit (status logic, ViewModels, validators, mappers), integration with Ktor MockEngine (data sources, token refresh, offline queue), real-time client against a mock server, UI tests; Android host tests added to CI.",
-      "doneWhen": "Every item above has tests that are green on Android (host) and the iOS simulator, and the Android host tests pass on GitHub Actions.",
+      "size": "M",
+      "summary": "Recipes and saved videos data layer (CRUD, Kedvencek / Újdonság status, \"Ízlett?\" answer with undo), website import and video link preview behind the existing library and editor interfaces.",
+      "doneWhen": "Against the local backend, every library and editor flow from the UI chunks works on both platforms, including import success/failure and saving a video with and without a preview.",
       "dependsOn": [
-        "mob-auth",
-        "mob-households",
-        "mob-recipe-library",
-        "mob-recipe-editor",
-        "mob-today",
-        "mob-grocery",
-        "mob-offline-cache",
-        "mob-realtime-client",
-        "mob-reminder"
+        "mob-recipe-library-ui",
+        "mob-recipe-editor-ui",
+        "mob-auth-api",
+        "be-recipes",
+        "be-recipe-import"
+      ]
+    },
+    {
+      "id": "mob-realtime-client",
+      "title": "Mobile real-time sync client",
+      "area": "mobile",
+      "size": "M",
+      "summary": "Raw WebSocket client with the access token in the handshake header, lifecycle tied to foreground/background, refresh-and-reconnect on the credential-expired close, reconnect with backoff and refetch of visible data, change notices turned into repository refreshes.",
+      "doneWhen": "Against the local backend, two devices in one household see each other's recipe, plan, grocery and membership changes live; reconnects refetch and the connection closes in background on both platforms.",
+      "dependsOn": [
+        "mob-households-api",
+        "mob-recipes-api",
+        "mob-plan-api",
+        "mob-grocery-api"
       ]
     },
     {
@@ -134,119 +287,30 @@
       ]
     },
     {
-      "id": "mob-scaffolding",
-      "title": "Mobile scaffolding & app shell",
+      "id": "mob-plan-api",
+      "title": "Mobile planner & Today connected to the backend",
       "area": "mobile",
       "size": "M",
-      "summary": "Compose Multiplatform project for Android + iOS, module structure, DI, navigation shell (bottom nav, routes incl. deep-link entry), layouts for the three phone sizes, Hungarian string resources, CI build (Android on GitHub Actions); feature modules, MVI, Koin, navigation-compose.",
-      "doneWhen": "Both apps build and launch locally, navigating between placeholder tabs on all three phone sizes; the Android build passes on GitHub Actions.",
-      "dependsOn": []
-    },
-    {
-      "id": "mob-design-system",
-      "title": "Mobile design system (Kamra, refined)",
-      "area": "mobile",
-      "size": "M",
-      "summary": "Light/dark tokens, Fredoka + Nunito typography, brand assets and base components from the Figma Design System page: buttons, chips, tags, cards, fields, list rows, sheets, dialogs, toggles, segmented control, empty states, toast, offline banner.",
-      "doneWhen": "A component catalogue screen shows every base component in light and dark on the three phone sizes, matching the Figma Design System page.",
+      "summary": "Meal plan data layer behind the planner and Today interfaces: week queries (past, this, next), add / replace / remove / change length, cooked mark and unmark with the marked-at time.",
+      "doneWhen": "Against the local backend, every planner and Today flow works on both platforms, including a meal crossing into next week and overlap replace.",
       "dependsOn": [
-        "mob-scaffolding"
+        "mob-planner-ui",
+        "mob-today-ui",
+        "mob-auth-api",
+        "be-meal-plan"
       ]
     },
     {
-      "id": "mob-api-fakes",
-      "title": "Mobile data layer & fake API",
+      "id": "mob-grocery-api",
+      "title": "Mobile grocery list connected to the backend",
       "area": "mobile",
-      "size": "M",
-      "summary": "Contract models, repository interfaces, HTTP client abstraction and error model, and fake implementations with realistic data, latency and error cases, plus a fake real-time event stream and fake connectivity state.",
-      "doneWhen": "Every contract operation has a fake behind a repository, switchable at build time, including its error cases (tests in mob-tests).",
+      "size": "S",
+      "summary": "Grocery data layer behind the grocery interfaces: both views for any week, idempotent tick / untick.",
+      "doneWhen": "Against the local backend, both views, ticks shared between two devices and past weeks work on both platforms.",
       "dependsOn": [
-        "api-contract",
-        "mob-scaffolding"
-      ]
-    },
-    {
-      "id": "mob-auth",
-      "title": "Mobile authentication",
-      "area": "mobile",
-      "size": "L",
-      "summary": "Welcome, login and register screens (email and password only), secure token storage, automatic refresh and retry, logout, session state driving navigation.",
-      "doneWhen": "All auth flows work end to end against the fake API on Android and iOS, including refresh and forced logout.",
-      "dependsOn": [
-        "mob-api-fakes",
-        "mob-design-system"
-      ]
-    },
-    {
-      "id": "mob-households",
-      "title": "Mobile households, profile & account",
-      "area": "mobile",
-      "size": "M",
-      "summary": "Onboarding choice (create / join by QR / solo), create household, invite QR display, camera QR scanner, join confirmation, profile with planning-reminder settings (stored on the phone), theme and logout.",
-      "doneWhen": "All household and profile flows work against the fake API on both platforms, including camera scanning on devices.",
-      "dependsOn": [
-        "mob-api-fakes",
-        "mob-design-system"
-      ]
-    },
-    {
-      "id": "mob-recipe-library",
-      "title": "Mobile recipe library, details & saved videos",
-      "area": "mobile",
-      "size": "L",
-      "summary": "Recipe library with search and Kedvencek / Újdonság filters, recipe details with servings stepper, ingredients, video and steps; saved videos list, full-screen player and video menu; empty states.",
-      "doneWhen": "Library, details, saved videos, the player and its fallback work against the fake API on all phone sizes, with live updates from the fake event stream.",
-      "dependsOn": [
-        "mob-api-fakes",
-        "mob-design-system"
-      ]
-    },
-    {
-      "id": "mob-recipe-editor",
-      "title": "Mobile recipe editor, website import & saving videos",
-      "area": "mobile",
-      "size": "L",
-      "summary": "New-recipe source sheet; manual create/edit/delete; paste-a-link website import with loading, failure and review-before-save states; saving a video link with title and thumbnail; making a recipe from a video.",
-      "doneWhen": "Create, edit, delete, website import (success + failure), saving a video link (with and without a preview) and recipe-from-video work against the fake API on both platforms.",
-      "dependsOn": [
-        "mob-api-fakes",
-        "mob-design-system"
-      ]
-    },
-    {
-      "id": "mob-planner",
-      "title": "Mobile weekly planner",
-      "area": "mobile",
-      "size": "L",
-      "summary": "Week view opened from Today, week navigation (past weeks, this week, next week), adding a recipe or saved video as a meal (cook day + 1–3 days), overlap warning, removing and editing meals, cook status tags, live updates, empty and offline states; accepts a target week for deep links.",
-      "doneWhen": "All planner flows work against the fake API on all phone sizes, including crossing into next week, overlap replace, and opening a specific week by route.",
-      "dependsOn": [
-        "mob-api-fakes",
-        "mob-design-system"
-      ]
-    },
-    {
-      "id": "mob-today",
-      "title": "Mobile daily cooking screen",
-      "area": "mobile",
-      "size": "M",
-      "summary": "Today screen (the Tervező tab's first screen): week strip, cook / leftover / done / empty states with shared status logic, expandable cook-day card, video meals, marking as cooked, the \"Ízlett?\" card, navigation to recipe details or the video.",
-      "doneWhen": "The status logic handles every carry-over and cooked combination and the screen works against the fake API on both platforms (tests in mob-tests).",
-      "dependsOn": [
-        "mob-api-fakes",
-        "mob-design-system"
-      ]
-    },
-    {
-      "id": "mob-grocery",
-      "title": "Mobile grocery list",
-      "area": "mobile",
-      "size": "M",
-      "summary": "Week grocery list with shared tick-off, per-recipe and in-store (merged) views, week navigation (any past week), video meals, offline ticking, empty state, live tick updates from the fake event stream.",
-      "doneWhen": "Both views work against the fake API with ticks syncing via fake events, including a video meal, past weeks and offline ticking with the fake connectivity state.",
-      "dependsOn": [
-        "mob-api-fakes",
-        "mob-design-system"
+        "mob-grocery-ui",
+        "mob-auth-api",
+        "be-grocery"
       ]
     },
     {
@@ -254,46 +318,25 @@
       "title": "Mobile offline cache",
       "area": "mobile",
       "size": "M",
-      "summary": "Local database caching all stored recipes, the saved video list, the current week's plan and grocery list; an offline write queue for grocery ticks and cooked marks; connectivity monitoring replacing the fake connectivity state; read-only signalling for everything else; cache refresh and expiry.",
-      "doneWhen": "With network off, all recipes, the saved video list, this week's plan and the grocery list load from cache on both platforms; grocery ticks and cooked marks are queued and sync on reconnect; other edits are blocked with the offline banner.",
+      "summary": "Local database caching all stored recipes, the saved video list, the current week's plan and grocery list; an offline write queue for grocery ticks and cooked marks replayed on reconnect; read-only signalling for every other edit; cache refresh and expiry.",
+      "doneWhen": "With network off, all recipes, the saved video list, this week's plan and the grocery list load from cache on both platforms; ticks and cooked marks are queued and reach the local backend on reconnect; other edits are blocked with the offline banner.",
       "dependsOn": [
-        "mob-api-fakes"
+        "mob-recipes-api",
+        "mob-plan-api",
+        "mob-grocery-api"
       ]
     },
     {
-      "id": "mob-realtime-client",
-      "title": "Mobile real-time sync client",
-      "area": "mobile",
-      "size": "M",
-      "summary": "Raw WebSocket client with the access token in the handshake header, lifecycle tied to app foreground/background, reconnect with backoff and refetch of visible data, turning change notices into repository refreshes in place of the fake stream.",
-      "doneWhen": "Against a local mock server, change notices refresh repositories, reconnects refetch, and the connection closes in background on both platforms (checked by hand).",
-      "dependsOn": [
-        "mob-api-fakes"
-      ]
-    },
-    {
-      "id": "mob-reminder",
-      "title": "Mobile planning reminder (local notification) & deep link",
-      "area": "mobile",
-      "size": "M",
-      "summary": "Weekly planning reminder as a local notification scheduled on the phone (day and time from the phone's settings, default Sunday 18:00), cancelled while next week is fully planned and rescheduled on every plan change; tapping opens next week in the planner from cold and warm start.",
-      "doneWhen": "On both platforms the reminder fires at the chosen time when next week isn't fully planned, is cancelled when it is, and opens the planner on next week.",
-      "dependsOn": [
-        "mob-planner"
-      ]
-    },
-    {
-      "id": "mob-integration",
-      "title": "Mobile ↔ real backend integration",
+      "id": "mob-tests",
+      "title": "Mobile tests",
       "area": "mobile",
       "size": "L",
-      "summary": "Replace fakes with the real HTTP and real-time implementations against the backend running locally on the Supabase database, verify every flow end to end on both platforms, fix contract drift, multi-device household sync check.",
-      "doneWhen": "All v1 flows pass an end-to-end checklist on Android and iOS against the locally running backend, including two devices syncing in one household and offline mode.",
+      "summary": "The mobile app's tests written in one go after the feature chunks: unit (status logic, ViewModels, validators, mappers), integration with Ktor MockEngine (data sources, token refresh, offline queue), real-time client against a mock server, UI tests; Android host tests added to CI.",
+      "doneWhen": "Every item above has tests that are green on Android (host) and the iOS simulator, and the Android host tests pass on GitHub Actions.",
       "dependsOn": [
-        "mob-tests",
-        "be-realtime",
-        "be-recipe-import",
-        "be-grocery"
+        "mob-realtime-client",
+        "mob-offline-cache",
+        "mob-reminder"
       ]
     }
   ]

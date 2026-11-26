@@ -21,12 +21,12 @@
 
 ## Stack
 - **Fixed by the spec:** Kotlin + Spring Boot backend; Compose Multiplatform mobile app (shared UI and logic, platform source sets for camera and notifications); Supabase Postgres used as a database only; backend-issued JWT auth (50 min access, 30 day refresh with rotation). (2026-11-20)
-- **API contract:** spec-first OpenAPI YAML written by Claude, kept in the backend repo (`contract/`); the backend's springdoc output is checked against it. (2026-11-23)
+- **API contract:** ~~spec-first OpenAPI YAML~~ superseded on 2026-11-26: code-first, see the revision below.
 - **Real-time:** WebSocket (2026-11-20). Raw WebSocket with JSON messages, the token in the `Authorization` header checked at the handshake, change notices only, clients refetch after reconnecting (no event log). (2026-11-23)
 - **Supabase:** one project (free plan), used directly for local development through the session pooler (port 5432). No dev branch, no staging. The Supabase MCP is used freely; the schema changes only through Flyway. (2026-11-23)
 - **Recipe import:** jsoup; video previews through oEmbed with an Open Graph fallback. (2026-11-23)
 - **Backend tooling:** Sentry free tier; one `application.yaml` plus `.env`, no profiles (secrets move to 1Password before going live); no Docker on the dev machine, so database tests use embedded Postgres; Awaitility for async tests. (2026-11-23)
-- **Mobile:** feature modules (`domain` / `data` / `presentation`), MVI, Koin, Ktor, navigation-compose; DTOs generated from the contract, which the mobile repo copies with `syncOpenApiSpec`; access token in memory, refresh token in the JSON body and in encrypted platform storage; Android minSdk 28, iOS 18.2+. (2026-11-23)
+- **Mobile:** feature modules (`domain` / `data` / `presentation`), MVI, Koin, Ktor, navigation-compose; DTOs generated from the backend's generated spec, which the mobile repo copies with `syncOpenApiSpec` (source changed 2026-11-26); access token in memory, refresh token in the JSON body and in encrypted platform storage; Android minSdk 28, iOS 18.2+. (2026-11-23)
 - **Mobile repo:** `~/Projektek/Csuporka`, restarted from the KMP wizard on 2026-11-23; the earlier Firebase-based app is abandoned. (2026-11-23)
 - **Mobile way of working:** learning mode (small steps as diffs, the owner types new concepts, commits after approval); mobile tests are written in a separate `mob-tests` chunk after the feature chunks. (2026-11-23)
 - **Left to the chunk sessions:** KMP local database (SQLDelight vs Room KMP), Ktor client config, QR scanning library, notification approach, video embedding, embedded Postgres library.
@@ -34,7 +34,7 @@
 ## Architecture
 - **Backend modules:** auth, household, recipe (recipes + saved videos), recipeimport, mealplan, grocery, realtime. They never depend on each other. Reads go through query interfaces in `:common`, implemented by the owning module; cross-module writes (join replaces the plan, recipe deletion empties plan days, household creation at registration) go through idempotent event listeners, eventually consistent. (2026-11-23)
 - **Events:** features publish in-process events; `be-realtime` turns them into change notices, which keeps real-time off the feature critical path. (2026-11-20)
-- **Mobile:** builds against a fake API layer with a fake real-time stream and a fake connectivity state. Feature chunks depend on the fakes and the design system, not on `mob-auth`, so they run in parallel. Mobile meets the backend only in `mob-integration`. (2026-11-20)
+- **Mobile:** ~~builds against a fake API layer, meets the backend only in `mob-integration`~~ superseded on 2026-11-26: feature UIs on in-memory stubs, then one `*-api` chunk per feature, see the revision below.
 - **Where logic lives:** grocery generation and ticks on the backend (shared by the household); cook / no-cook status and "is next week fully planned" in shared mobile code, so they work offline. (2026-11-20, 2026-11-23)
 
 ## Product rules
@@ -58,3 +58,22 @@
 - The plan and design docs live in this planning folder, not in a code repo. The backend and mobile repos each have an `AGENTS.md` with their engineering rules, repeating the key product rules; all three are kept in sync (last aligned 2026-11-23).
 - Precedence on product behaviour: `design/DESIGN-DECISIONS.md` + Figma, then the chunk files, then `OVERVIEW.md`, then the repos' `AGENTS.md`. On engineering rules, each repo's `AGENTS.md` wins over its skills.
 - The Figma file was updated to match the decisions on 2026-11-20 and 2026-11-23.
+
+## Revision: code-first contract (2026-11-26)
+- **API contract is code-first:** each backend feature's springdoc output is the wire contract, published for mobile when that feature is built. The spec-first OpenAPI YAML (`contract/openapi.yaml`) and the springdoc-vs-YAML check are dropped. Mobile therefore can't build against a contract-based fake layer, so `mob-api-fakes` is removed. (2026-11-26)
+- **Behavioral contract = shared specs:** the archived `define-domain-model` change in the shared-specs store (identity, households, recipe library, meal plan, grocery list, live sync, offline replay, domain error codes) is the behavioral contract. It counts as done, so `api-contract` is no longer a chunk. Wave 1 is `be-scaffolding` + `mob-scaffolding`. (2026-11-26)
+- **Backend platform utilities first:** wave 2 on the backend is one chunk of cross-cutting utilities in `:common` / `:app` (security filter chain, springdoc and how the generated spec reaches mobile, shared error model) that every backend feature builds on. `be-auth` moves from wave 2 to wave 3. (2026-11-26)
+- **Mobile builds UI first, connects later:** wave 3 builds every mobile feature's UI in parallel, one chunk per feature module: screens, MVI ViewModels, domain models and repository interfaces on hand-written in-memory stubs, with feature logic (Today status, planner rules) finished here. Wave 4 onwards adds one "connect to the API" chunk per feature, which puts the data layer (generated DTOs, mappers, Ktor) behind those interfaces once the matching backend chunk is done. (2026-11-26)
+- **Clients:** mobile only. "Web clients" in the request was a slip; no web target. (2026-11-26)
+- **Deployment:** stays out of v1, as decided on 2026-11-23. No VPS/infra chunk is added at the end; `docs/go-live.md` keeps tracking it. (2026-11-26)
+- **Graph changes approved (2026-11-26):**
+  - New `be-platform` (wave 2): security filter chain, authenticated principal, springdoc and how its spec reaches mobile, error-code catalogue, auth test helpers.
+  - New `mob-network` (wave 3): Ktor client, DTO generation from springdoc's output, error mapping, connectivity. Keeps `mob-auth-api` at M.
+  - Mobile feature chunks split into `mob-*-ui` (wave 3, in-memory stubs) and `mob-*-api` (after the matching backend chunk). Recipe library and editor share one `mob-recipes-api`; planner and Today share `mob-plan-api`.
+  - Removed: `api-contract` (done in the shared specs), `mob-api-fakes`, `mob-integration`. Each `*-api` chunk is verified against the local backend, the two-device check moved to `mob-realtime-client` and the offline check to `mob-offline-cache`.
+  - `be-recipe-import` and `be-households` depend on `be-platform` only (wave 3, next to `be-auth`). Households listens for a "user registered" event in `:common` that `be-auth` publishes.
+  - `mob-offline-cache` comes after the recipe, plan and grocery data layers; `mob-reminder` only needs `mob-planner-ui`.
+  - Accepted trade-off: the backend chain is the critical path (9 waves, up from 7). Wave-3 domain models are written before the DTOs, so the `*-api` mappers absorb any differences.
+  - Follow-up: both repos' `AGENTS.md` still describe the spec-first contract and fakes and need updating.
+  - Refinement while writing the files: `mob-realtime-client` depends on all four mobile `*-api` chunks (wave 8, next to `mob-offline-cache`), because change notices refresh repositories that only exist once each feature is connected. The two-device check then covers every feature. The critical path stays at 9 waves.
+  - `mob-scaffolding` also sets the conventions for repository interfaces and in-memory stubs (Flow, domain error type), so the eight parallel wave-3 UI chunks build alike.

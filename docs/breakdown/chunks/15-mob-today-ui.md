@@ -1,16 +1,16 @@
-# Mobile daily cooking screen
+# Mobile daily cooking screen UI
 
 | | |
 |---|---|
-| ID | `mob-today` |
+| ID | `mob-today-ui` |
 | Area | Mobile (Compose Multiplatform) |
 | Size | M |
 | Wave | 3 |
-| Depends on | `mob-api-fakes` (plan + recipe repositories), `mob-design-system` (components) |
-| Unlocks | `mob-tests` |
+| Depends on | `mob-design-system` (base components, tokens and assets) |
+| Unlocks | `mob-plan-api` |
 
 ## Goal
-Today screen (the Tervező tab's first screen): week strip, cook / leftover / done / empty states with shared status logic, expandable cook-day card, video meals, marking as cooked, the "Ízlett?" card, navigation to recipe details or the video.
+The Today screen with the shared cook / leftover / done / empty status logic, the expandable cook card, marking as cooked and the "Ízlett?" card, on an in-memory stub.
 
 ## In scope
 - Shared domain logic: for today, cook day (not cooked → cook, cooked → done), leftover day (and from which day), or nothing planned
@@ -22,23 +22,28 @@ Today screen (the Tervező tab's first screen): week strip, cook / leftover / do
 - Empty states: nothing planned today ("Hozzáadás mára", "Heti terv megnyitása"); no recipes yet ("Első recept felvétele")
 
 ## Out of scope
-- Recipe details screen and video player themselves (mob-recipe-library)
+- Recipe details screen and video player themselves (`mob-recipe-library-ui`)
+- Real plan data and cooked marks (`mob-plan-api`)
+- Offline queueing of cooked marks (`mob-offline-cache`)
 
 ## Builds on
-- mob-api-fakes, mob-design-system
+- `mob-design-system` components; `mob-scaffolding` navigation, module layout and the repository/stub conventions
+- Shared specs: `meal-plan`
 
 ## Provides
 - Main screen of the app
 
 ## Done when
-- The status logic handles every carry-over and cooked combination and the screen works against the fake API on both platforms (tests in `mob-tests`).
+- The status logic handles every carry-over and cooked combination and the screen shows each state on the stub on both platforms.
 
 ## Decisions from the breakdown
+- Built on hand-written in-memory stubs behind the feature's repository interfaces, with seeded Hungarian data; the data layer comes later in its `*-api` chunk (2026-11-26)
 - Status computed on device so it works offline
 - One lunch per day, so there are no mixed days
 
 ## Open questions for the deep-dive session
 - Wording when carried over from two days ago (day 3 of a meal)
+- Stub seed data and how to switch stub states (errors, offline, another member's change) for manual checks
 
 ## Meal done state ("Megfőztem") and "Ízlett?"
 See `design/DESIGN-DECISIONS.md` › *Marking a meal as cooked*, *Recipes* and *Notifications*.
@@ -48,6 +53,6 @@ See `design/DESIGN-DECISIONS.md` › *Marking a meal as cooked*, *Recipes* and *
 - Undo: toast with "Visszavonás", and a "Mégsem főztem meg" text button under the done card until the day ends.
 - Status logic gains the cooked input: cook day not cooked → cook; cook day cooked → done; leftover days unchanged.
 - "Ízlett?" card: shown from the day after a new recipe/video was marked as cooked, until someone in the household answers. Not shown if it was never marked.
-- Answers: Ízlett (recipe) → Kedvencek, with a toast; Ízlett (video) → the editor opens with name and video prefilled (mob-recipe-editor); Nem ízlett → deleted for the whole household, with an undo toast. The first answer decides for everyone and the card disappears for all members.
-- Marking and unmarking work offline (queued) and update live when another member marks or unmarks.
+- Answers: Ízlett (recipe) → Kedvencek, with a toast; Ízlett (video) → the editor opens with name and video prefilled (`mob-recipe-editor-ui`); Nem ízlett → deleted for the whole household, with an undo toast. The first answer decides for everyone and the card disappears for all members.
+- Marking and unmarking work offline (queued, `mob-offline-cache`) and update live when another member marks or unmarks (`mob-realtime-client`).
 - The "Ízlett?" answer needs a connection: offline the card is shown with its buttons disabled.

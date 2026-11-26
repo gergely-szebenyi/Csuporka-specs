@@ -1,16 +1,16 @@
-# Mobile weekly planner
+# Mobile weekly planner UI
 
 | | |
 |---|---|
-| ID | `mob-planner` |
+| ID | `mob-planner-ui` |
 | Area | Mobile (Compose Multiplatform) |
 | Size | L |
 | Wave | 3 |
-| Depends on | `mob-api-fakes` (plan repository), `mob-design-system` (components) |
-| Unlocks | `mob-reminder` |
+| Depends on | `mob-design-system` (base components, tokens and assets) |
+| Unlocks | `mob-reminder`, `mob-plan-api` |
 
 ## Goal
-Week view opened from Today, week navigation (past weeks, this week, next week), adding a recipe or saved video as a meal (cook day + 1–3 days), overlap warning, removing and editing meals, cook status tags, live updates, empty and offline states; accepts a target week for deep links.
+The week view with navigation, adding a recipe or saved video as a meal, overlap replace, editing and removing meals, and cook status tags, on an in-memory stub.
 
 ## In scope
 - Week view opened from Today ("Heti terv" link or the week strip)
@@ -24,33 +24,37 @@ Week view opened from Today, week navigation (past weeks, this week, next week),
 - Multi-day meals shown as cook day + leftover rows ("2. nap – nem kell főzni")
 - Remove via swipe with undo toast; removing the cook day removes the whole meal
 - Day menu: Recept megnyitása, Csere másik receptre, Napok száma (change length later), Eltávolítás a tervből
-- Toast when another household member changes the plan (from fake events)
-- Empty and unplanned week states
-- Offline: readable, adding disabled
+- Toast when another household member changes the plan (triggered from the stub here; live in `mob-realtime-client`)
+- Empty and unplanned week states; offline: readable, adding disabled (driven by a connectivity input)
 - Route that opens a given week (for deep links)
+- Planning rules in shared code; plan repository interface with an in-memory stub (shared with `mob-today-ui`)
 
 ## Out of scope
-- Planning reminder (mob-reminder)
-- Today screen (mob-today)
+- Planning reminder (`mob-reminder`)
+- Today screen (`mob-today-ui`)
+- Real plan data (`mob-plan-api`)
 - Tablet layouts (out of v1)
 
 ## Builds on
-- mob-api-fakes, mob-design-system
+- `mob-design-system` components; `mob-scaffolding` navigation, module layout and the repository/stub conventions
+- Shared specs: `meal-plan`
 
 ## Provides
-- Planner route with week parameter used by mob-reminder
+- Planner route with week parameter and the plan data interface used by `mob-reminder`
 
 ## Done when
-- All planner flows work against the fake API on all phone sizes, including crossing into next week, overlap replace, and opening a specific week by route.
+- All planner flows work on the stub on all phone sizes, including crossing into next week, overlap replace and opening a specific week by route.
 
 ## Decisions from the breakdown
+- Built on hand-written in-memory stubs behind the feature's repository interfaces, with seeded Hungarian data; the data layer comes later in its `*-api` chunk (2026-11-26)
 - One lunch per day; weeks start on Monday
 - A meal is cooked once (cook day) and lasts 1–3 consecutive days
 - Planned meals have no servings
 - A meal that runs into next week puts its ingredients on the cook day's week's grocery list
 
 ## Open questions for the deep-dive session
-- None left from the breakdown; review edge cases in the session
+- Which of planner/Today owns the plan domain models and repository interface
+- Stub seed data and how to switch stub states (errors, offline, another member's change) for manual checks
 
 ## Meal done state ("Megfőztem")
 See `design/DESIGN-DECISIONS.md` › *Marking a meal as cooked* and *Notifications*.

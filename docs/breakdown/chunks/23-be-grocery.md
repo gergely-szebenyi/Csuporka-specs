@@ -6,8 +6,8 @@
 | Area | Backend (Spring Boot) |
 | Size | M |
 | Wave | 6 |
-| Depends on | `be-meal-plan` (the week's planned meals) |
-| Unlocks | `mob-integration` |
+| Depends on | `be-meal-plan` (plan data through a query interface in `:common`) |
+| Unlocks | `mob-grocery-api` |
 
 ## Goal
 Generate the week's grocery list from the plan using each recipe's own amounts, count multi-day meals once, per-recipe and merged views sharing one tick per line, video meals as links; regenerates on plan/recipe change.
@@ -29,10 +29,11 @@ Generate the week's grocery list from the plan using each recipe's own amounts, 
 - Servings scaling into the list (servings only scale the view on recipe details)
 
 ## Builds on
-- be-meal-plan, be-recipes ingredient model
+- `be-meal-plan`, `be-recipes` ingredient model
+- Shared specs: `grocery-list`
 
 ## Provides
-- Grocery endpoints for mob-grocery
+- Grocery endpoints for `mob-grocery-api`
 
 ## Done when
 - Grocery endpoints pass tests for grouping in the merged view, multi-day dedupe, cross-week meals, video meals, tick persistence (one tick shown in both views) and regeneration after plan edits.
@@ -41,7 +42,6 @@ Generate the week's grocery list from the plan using each recipe's own amounts, 
 - Generated and stored server-side so ticks are shared in the household
 - The merged view lists lines, it doesn't add amounts, so no unit conversion is needed
 - Grouping matches ingredient names ignoring case and accents ("Tejföl" = "tejfol")
-
 - When regeneration changes a line's amount, that line is unticked (2026-11-23)
 - One tick per line for both views, since the merged view no longer adds amounts (2026-11-23)
 - Reads plan and recipe data through query interfaces in `:common`
