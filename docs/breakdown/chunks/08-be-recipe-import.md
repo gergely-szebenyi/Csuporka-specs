@@ -6,7 +6,7 @@
 | Area | Backend (Spring Boot) |
 | Size | M |
 | Wave | 3 |
-| Depends on | `be-platform` (security chain, error codes, test helpers) |
+| Depends on | `api-contract` (import and link-preview operations), `be-platform` (security chain, error codes, test helpers) |
 | Unlocks | `mob-recipes-api` |
 
 ## Goal
@@ -40,6 +40,7 @@ Fetch a URL safely and extract a recipe draft from schema.org Recipe structured 
 - schema.org parsing only, no AI; synchronous request, no job queue, no 'recipe ready' push
 - jsoup for HTML and JSON-LD; video previews via oEmbed (YouTube, TikTok, ...) with Open Graph tags as the fallback (2026-11-23)
 - User-supplied URLs are fetched by a dedicated SSRF-safe fetcher, not an `@HttpExchange` client
+- Implements the operations from `api-contract`; springdoc publishes the wire format (2026-11-26)
 
 ## Open questions for the deep-dive session
 - Handling sites that block bots

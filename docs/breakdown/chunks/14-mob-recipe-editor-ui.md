@@ -6,7 +6,7 @@
 | Area | Mobile (Compose Multiplatform) |
 | Size | L |
 | Wave | 3 |
-| Depends on | `mob-design-system` (base components, tokens and assets) |
+| Depends on | `api-contract` (recipe, import and preview operations the interfaces mirror), `mob-design-system` (base components, tokens and assets) |
 | Unlocks | `mob-recipes-api` |
 
 ## Goal
@@ -45,6 +45,7 @@ New-recipe source sheet, manual create/edit/delete, website import with review b
 - Import shows a draft for review before saving
 - Recipe photos are assigned at random from the bundled set; no upload
 - Only the name is required to save a recipe
+- Repository interfaces mirror the operations in `api-contract`, so the `*-api` chunk only adds DTOs and mapping (2026-11-26)
 
 ## Open questions for the deep-dive session
 - Reordering ingredients/steps

@@ -6,7 +6,7 @@
 | Area | Mobile (Compose Multiplatform) |
 | Size | M |
 | Wave | 3 |
-| Depends on | `mob-design-system` (base components, tokens and assets) |
+| Depends on | `api-contract` (grocery operations the interface mirrors), `mob-design-system` (base components, tokens and assets) |
 | Unlocks | `mob-grocery-api` |
 
 ## Goal
@@ -42,6 +42,7 @@ The week grocery list with per-recipe and in-store views, ticking, week navigati
 - Built on hand-written in-memory stubs behind the feature's repository interfaces, with seeded Hungarian data; the data layer comes later in its `*-api` chunk (2026-11-26)
 - List is generated server-side; client only displays and ticks
 - Grocery list is viewable and tickable offline
+- Repository interfaces mirror the operations in `api-contract`, so the `*-api` chunk only adds DTOs and mapping (2026-11-26)
 
 ## Open questions for the deep-dive session
 - Showing a pending tick when another member changed the same item meanwhile

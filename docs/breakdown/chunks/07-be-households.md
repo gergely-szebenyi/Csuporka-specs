@@ -6,7 +6,7 @@
 | Area | Backend (Spring Boot) |
 | Size | M |
 | Wave | 3 |
-| Depends on | `be-platform` (principal, `user registered` event type, error codes, test helpers) |
+| Depends on | `api-contract` (household operations), `be-platform` (principal, `user registered` event type, error codes, test helpers) |
 | Unlocks | `be-realtime`, `be-recipes`, `mob-households-api` |
 
 ## Goal
@@ -42,6 +42,7 @@ Household of one for every new user, naming it ("Létrehozás"), QR invite token
 - A user belongs to exactly one household; all members are equal (no owner role)
 - Join by QR invite only in v1 (no invite link)
 - Cross-module writes (plan replacement) go through idempotent event listeners; eventual consistency is accepted (2026-11-23)
+- Implements the operations from `api-contract`; springdoc publishes the wire format (2026-11-26)
 
 ## Open questions for the deep-dive session
 - The household is created through an event (eventually consistent): how requests behave before it exists

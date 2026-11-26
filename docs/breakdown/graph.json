@@ -5,6 +5,10 @@
   },
   "areas": [
     {
+      "id": "contract",
+      "name": "API Contract"
+    },
+    {
       "id": "backend",
       "name": "Backend (Spring Boot)"
     },
@@ -14,6 +18,15 @@
     }
   ],
   "chunks": [
+    {
+      "id": "api-contract",
+      "title": "Behavioral API contract (operations)",
+      "area": "contract",
+      "size": "M",
+      "summary": "An OpenSpec change in the shared-specs store that adds the API's operations to the shared specs: every operation clients can call, its inputs and results in domain terms, whether it needs a session, the error codes it can return, whether it is a replayable target-state write, and which change notices it triggers. No paths, field names, JSON shapes or status codes: springdoc output stays the wire contract.",
+      "doneWhen": "The change is archived into openspec/specs; every client action in the Figma flows maps to an operation, every operation lists its error codes from domain-errors, and every write names its live-sync notice.",
+      "dependsOn": []
+    },
     {
       "id": "be-scaffolding",
       "title": "Backend scaffolding & architecture",
@@ -62,6 +75,7 @@
       "summary": "Users (name, email, password), registration and login, JWT access (50 min, HS256) + opaque refresh (30 days) with rotation, per-device families and reuse detection, logout; issues the tokens the be-platform filter chain validates.",
       "doneWhen": "All auth endpoints pass tests, including refresh rotation, reuse detection revoking only that device's family, expiry and logout, and they appear in the generated spec.",
       "dependsOn": [
+        "api-contract",
         "be-platform"
       ]
     },
@@ -73,6 +87,7 @@
       "summary": "Fetch a URL safely and extract a recipe draft from schema.org Recipe structured data (JSON-LD/microdata), normalizing ingredients into quantity/unit/name; clear error when nothing is found. Read the title and thumbnail of a video link for saved videos.",
       "doneWhen": "Import endpoint returns correct drafts for a fixture set of real recipe sites (incl. Hungarian ones) and the specified error for pages without recipe data; link preview returns title and thumbnail for common video sites (YouTube, TikTok, Facebook) and an empty preview otherwise.",
       "dependsOn": [
+        "api-contract",
         "be-platform"
       ]
     },
@@ -96,6 +111,7 @@
       "summary": "Welcome, login and register screens (email and password only) with validation, error states and the session state that drives navigation (signed out / signed in), on in-memory stubs behind repository interfaces.",
       "doneWhen": "Register, login, failed login and logout flows work on the stub on Android and iOS, and session state switches the navigation graph.",
       "dependsOn": [
+        "api-contract",
         "mob-design-system"
       ]
     },
@@ -107,6 +123,7 @@
       "summary": "Onboarding choice (create / join by QR / solo), create household, invite QR display, camera QR scanner, join confirmation, profile with planning-reminder settings (stored on the phone), theme and logout entry, on in-memory stubs behind repository interfaces.",
       "doneWhen": "All household and profile flows work on the stub on both platforms, including camera scanning on devices.",
       "dependsOn": [
+        "api-contract",
         "mob-design-system"
       ]
     },
@@ -118,6 +135,7 @@
       "summary": "Recipe library with on-phone search and Kedvencek / Újdonság filters, recipe details with servings stepper, ingredients, video and steps; saved videos list, full-screen player and video menu; empty states; on in-memory stubs behind repository interfaces.",
       "doneWhen": "Library, details, saved videos, the player and its fallback work on the stub on all three phone sizes.",
       "dependsOn": [
+        "api-contract",
         "mob-design-system"
       ]
     },
@@ -129,6 +147,7 @@
       "summary": "New-recipe source sheet; manual create/edit/delete; paste-a-link website import with loading, failure and review-before-save states; saving a video link with title and thumbnail; making a recipe from a video; on in-memory stubs behind repository interfaces.",
       "doneWhen": "Create, edit, delete, import (success + failure), saving a video link (with and without a preview) and recipe-from-video work on the stub on both platforms.",
       "dependsOn": [
+        "api-contract",
         "mob-design-system"
       ]
     },
@@ -140,6 +159,7 @@
       "summary": "Week view opened from Today, week navigation (past, this, next week), adding a recipe or saved video as a meal (cook day + 1–3 days), overlap warning and replace, removing and editing meals, cook status tags, empty state; accepts a target week for deep links; planning rules in shared code, on in-memory stubs behind repository interfaces.",
       "doneWhen": "All planner flows work on the stub on all phone sizes, including crossing into next week, overlap replace and opening a specific week by route.",
       "dependsOn": [
+        "api-contract",
         "mob-design-system"
       ]
     },
@@ -151,6 +171,7 @@
       "summary": "Today screen (the Tervező tab's first screen): week strip, cook / leftover / done / empty states driven by the shared status logic, expandable cook-day card, video meals, marking as cooked, the \"Ízlett?\" card, navigation to recipe details or the video; on in-memory stubs behind repository interfaces.",
       "doneWhen": "The status logic handles every carry-over and cooked combination and the screen shows each state on the stub on both platforms.",
       "dependsOn": [
+        "api-contract",
         "mob-design-system"
       ]
     },
@@ -162,6 +183,7 @@
       "summary": "Week grocery list with tick-off, per-recipe and in-store (merged) views, week navigation (any past week), video meals, empty state; on in-memory stubs behind repository interfaces.",
       "doneWhen": "Both views, ticking, a video meal and past weeks work on the stub on both platforms.",
       "dependsOn": [
+        "api-contract",
         "mob-design-system"
       ]
     },
@@ -186,6 +208,7 @@
       "summary": "Household of one for every user (created by listening to the registration event in :common, named via \"Létrehozás\"), QR invite tokens (24 h, reusable, a new one revokes the old), join with merge of the joiner's recipes and saved videos, membership query for other modules.",
       "doneWhen": "Household endpoints pass tests; non-members are denied; join merges recipes and videos and replaces the joiner's plan.",
       "dependsOn": [
+        "api-contract",
         "be-platform"
       ]
     },

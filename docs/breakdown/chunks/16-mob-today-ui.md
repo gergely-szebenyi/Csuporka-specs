@@ -6,7 +6,7 @@
 | Area | Mobile (Compose Multiplatform) |
 | Size | M |
 | Wave | 3 |
-| Depends on | `mob-design-system` (base components, tokens and assets) |
+| Depends on | `api-contract` (cooked mark and verdict operations), `mob-design-system` (base components, tokens and assets) |
 | Unlocks | `mob-plan-api` |
 
 ## Goal
@@ -40,6 +40,7 @@ The Today screen with the shared cook / leftover / done / empty status logic, th
 - Built on hand-written in-memory stubs behind the feature's repository interfaces, with seeded Hungarian data; the data layer comes later in its `*-api` chunk (2026-11-26)
 - Status computed on device so it works offline
 - One lunch per day, so there are no mixed days
+- Repository interfaces mirror the operations in `api-contract`, so the `*-api` chunk only adds DTOs and mapping (2026-11-26)
 
 ## Open questions for the deep-dive session
 - Wording when carried over from two days ago (day 3 of a meal)

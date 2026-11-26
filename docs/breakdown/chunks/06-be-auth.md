@@ -6,7 +6,7 @@
 | Area | Backend (Spring Boot) |
 | Size | L |
 | Wave | 3 |
-| Depends on | `be-platform` (filter chain, error codes, `user registered` event type) |
+| Depends on | `api-contract` (identity operations), `be-platform` (filter chain, error codes, `user registered` event type) |
 | Unlocks | `mob-auth-api` |
 
 ## Goal
@@ -44,6 +44,7 @@ Users, email/password registration and login, JWT access (50 min) + refresh (30 
 - No emails in v1, so no verification or reset flows
 - HS256, per-device families with reuse detection, no rate limiting (2026-11-23)
 - Tokens travel in JSON bodies, no cookies (2026-11-23)
+- Implements the operations from `api-contract`; springdoc publishes the wire format (2026-11-26)
 
 ## Open questions for the deep-dive session
 - Cleanup job for expired refresh tokens (schedule)

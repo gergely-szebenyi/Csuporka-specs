@@ -6,7 +6,7 @@
 | Area | Mobile (Compose Multiplatform) |
 | Size | L |
 | Wave | 3 |
-| Depends on | `mob-design-system` (base components, tokens and assets) |
+| Depends on | `api-contract` (meal plan operations the plan interface mirrors), `mob-design-system` (base components, tokens and assets) |
 | Unlocks | `mob-reminder`, `mob-plan-api` |
 
 ## Goal
@@ -51,6 +51,7 @@ The week view with navigation, adding a recipe or saved video as a meal, overlap
 - A meal is cooked once (cook day) and lasts 1–3 consecutive days
 - Planned meals have no servings
 - A meal that runs into next week puts its ingredients on the cook day's week's grocery list
+- Repository interfaces mirror the operations in `api-contract`, so the `*-api` chunk only adds DTOs and mapping (2026-11-26)
 
 ## Open questions for the deep-dive session
 - Which of planner/Today owns the plan domain models and repository interface

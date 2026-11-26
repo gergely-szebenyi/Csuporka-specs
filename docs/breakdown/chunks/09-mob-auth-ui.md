@@ -6,7 +6,7 @@
 | Area | Mobile (Compose Multiplatform) |
 | Size | M |
 | Wave | 3 |
-| Depends on | `mob-design-system` (base components, tokens and assets) |
+| Depends on | `api-contract` (identity operations the auth interface mirrors), `mob-design-system` (base components, tokens and assets) |
 | Unlocks | `mob-auth-api` |
 
 ## Goal
@@ -38,6 +38,7 @@ Welcome, login and register screens with email and password, and the session sta
 - Built on hand-written in-memory stubs behind the feature's repository interfaces, with seeded Hungarian data; the data layer comes later in its `*-api` chunk (2026-11-26)
 - No password reset or email verification in v1
 - Email and password only (2026-11-23)
+- Repository interfaces mirror the operations in `api-contract`, so the `*-api` chunk only adds DTOs and mapping (2026-11-26)
 
 ## Open questions for the deep-dive session
 - Stub seed data and how to switch stub states (errors, offline, another member's change) for manual checks

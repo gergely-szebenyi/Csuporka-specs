@@ -6,7 +6,7 @@
 | Area | Mobile (Compose Multiplatform) |
 | Size | M |
 | Wave | 3 |
-| Depends on | `mob-design-system` (base components, tokens and assets) |
+| Depends on | `api-contract` (household operations the interface mirrors), `mob-design-system` (base components, tokens and assets) |
 | Unlocks | `mob-households-api` |
 
 ## Goal
@@ -46,6 +46,7 @@ Onboarding choice, create household, invite QR display, camera QR scanner, join 
 - QR join is in v1; share-sheet import is not
 - Invites are QR only (no link)
 - Reminder settings are per device, not synced (2026-11-23)
+- Repository interfaces mirror the operations in `api-contract`, so the `*-api` chunk only adds DTOs and mapping (2026-11-26)
 
 ## Open questions for the deep-dive session
 - QR scanning library per platform

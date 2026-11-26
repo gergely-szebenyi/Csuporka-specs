@@ -6,7 +6,7 @@
 | Area | Mobile (Compose Multiplatform) |
 | Size | L |
 | Wave | 3 |
-| Depends on | `mob-design-system` (base components, tokens and assets) |
+| Depends on | `api-contract` (recipe and video operations the interfaces mirror), `mob-design-system` (base components, tokens and assets) |
 | Unlocks | `mob-recipes-api` |
 
 ## Goal
@@ -45,6 +45,7 @@ Recipe library with search and Kedvencek / Újdonság filters, recipe details, s
 - Recipes and saved videos are household-shared; Kedvencek / Újdonság is household-wide, not per user
 - Servings exist only on recipes, to calculate ingredient amounts
 - Search filters the cached recipes and videos on the phone (works offline); no search endpoint
+- Repository interfaces mirror the operations in `api-contract`, so the `*-api` chunk only adds DTOs and mapping (2026-11-26)
 
 ## Open questions for the deep-dive session
 - Servings scaling rounding rules
